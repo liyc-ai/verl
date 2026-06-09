@@ -241,6 +241,16 @@ class ResourcePoolManager:
                 f"Total available GPUs {total_available_gpus} is less than total desired GPUs {total_required_gpus}"
             )
 
+        # check total required cpus can be satisfied
+        total_available_cpus = sum(node_info.get("CPU", 0) for node_info in node_available_resources.values())
+        total_required_cpus = total_required_gpus * self.max_colocate_count
+        if total_available_cpus < total_required_cpus:
+            raise ValueError(
+                f"Total available CPUs {total_available_cpus} is less than total required CPUs {total_required_cpus} "
+                f"({total_required_gpus} GPUs × {self.max_colocate_count} max_colocate_count per bundle). "
+                f"Other Ray actors may have consumed CPU resources before placement group creation."
+            )
+
 
 def extract_pg_from_exist(
     resource_pools: dict[str, RayResourcePool], src_role_names: list[str], resource_pool: RayResourcePool
